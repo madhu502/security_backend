@@ -41,6 +41,7 @@ connectDatabase();
 
 // Load the SSL certificate and private key
 const key = fs.readFileSync('/Users/madhu/Desktop/security_backend/server.key', 'utf8');
+const cert = fs.readFileSync('/Users/madhu/Desktop/security_backend/server.csr', 'utf8');
 
 //making a test endpoint.
 app.get("/test", (req, res) => {
