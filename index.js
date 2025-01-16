@@ -40,6 +40,7 @@ const PORT = process.env.PORT;
 connectDatabase();
 
 // Load the SSL certificate and private key
+const key = fs.readFileSync('/Users/madhu/Desktop/security_backend/server.key', 'utf8');
 
 //making a test endpoint.
 app.get("/test", (req, res) => {
