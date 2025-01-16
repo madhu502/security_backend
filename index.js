@@ -43,6 +43,8 @@ connectDatabase();
 const key = fs.readFileSync('/Users/madhu/Desktop/security_backend/server.key', 'utf8');
 const cert = fs.readFileSync('/Users/madhu/Desktop/security_backend/server.csr', 'utf8');
 
+const httpsOptions = { key, cert };
+
 //making a test endpoint.
 app.get("/test", (req, res) => {
   res.status(200);
