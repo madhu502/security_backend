@@ -39,6 +39,8 @@ const PORT = process.env.PORT;
 //connecting to databas
 connectDatabase();
 
+// Load the SSL certificate and private key
+
 //making a test endpoint.
 app.get("/test", (req, res) => {
   res.status(200);
