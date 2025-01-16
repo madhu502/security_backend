@@ -19,7 +19,7 @@ app.use(express.json());
 
 //configure cors policy
 const corsOptions = {
-  origin: true,
+  origin: "https://localhost:5500",
   credentials: true,
   optionSuccessStatus: 200,
 };
@@ -40,16 +40,11 @@ const PORT = process.env.PORT;
 connectDatabase();
 
 // Load the SSL certificate and private key
-const key = fs.readFileSync(
-  "/Users/madhu/Desktop/security_backend/server.key",
-  "utf8"
-);
-const cert = fs.readFileSync(
-  "/Users/madhu/Desktop/security_backend/server.crt",
-  "utf8"
-);
+const key = fs.readFileSync("localhost.key", "utf8");
+const cert = fs.readFileSync("localhost.cert", "utf8");
 
-const httpsOptions = { key, cert };
+const server = https.createServer({ key, cert }, app);
+const port = process.env.PORT || 4000;
 
 //making a  endpoint.
 app.get("/test", (req, res) => {
@@ -72,9 +67,18 @@ app.use("/api/review", require("./routes/reviewRoutes"));
 // app.listen(PORT, () => {
 //   console.log(`Server - app is running on port ${PORT}`);
 // });
+
 // Create HTTPS server
-https.createServer(httpsOptions, app).listen(PORT, () => {
-  console.log(`Server running on https://localhost:${PORT}`);
-});
+// https.createServer(httpsOptions, app).listen(PORT, (err) => {
+//   if (err) {
+//     console.error(`Failed to start server: ${err.message}`);
+//   } else {
+//     console.log(`Server running on https://localhost:${PORT}`);
+//   }
+// });
+
+server.listen(port, () =>
+  console.log(`Server is running on port ${port} with SSL certificate.`)
+);
 
 module.exports = app;
