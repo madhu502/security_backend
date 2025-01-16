@@ -45,10 +45,10 @@ const cert = fs.readFileSync('/Users/madhu/Desktop/security_backend/server.csr',
 
 const httpsOptions = { key, cert };
 
-//making a test endpoint.
-app.get("/test", (req, res) => {
+//making a  endpoint.
+app.get("/", (req, res) => {
   res.status(200);
-  res.send("Hello World, test api is working.");
+  res.send("'HTTPS is working on localhost!'");
 });
 
 //configuring routes
