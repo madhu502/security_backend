@@ -1,9 +1,10 @@
 // importing the packages. (express.)
 const express = require("express");
-// importing the packages. (mangoose.)
+
 const mongoose = require("mongoose");
 const fs = require("fs");
 const https = require("https");
+const http = require("http");
 // importing the data base
 const connectDatabase = require("./database/database");
 // importing the dotenv
@@ -12,6 +13,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 // importing express-fileupload
 const acceptFOrmData = require("express-fileupload");
+const multiparty = require("connect-multiparty");
 
 // creating an express application.
 const app = express();
@@ -19,11 +21,12 @@ app.use(express.json());
 
 //configure cors policy
 const corsOptions = {
-  origin: "https://localhost:5500",
+  origin: true,
   credentials: true,
   optionSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
+app.use(multiparty());
 
 //dotenv configuration
 dotenv.config();
@@ -39,12 +42,12 @@ const PORT = process.env.PORT;
 //connecting to databas
 connectDatabase();
 
-// Load the SSL certificate and private key
-const key = fs.readFileSync("localhost.key", "utf8");
-const cert = fs.readFileSync("localhost.cert", "utf8");
+// // Load the SSL certificate and private key
+// const key = fs.readFileSync("localhost.key", "utf8");
+// const cert = fs.readFileSync("localhost.cert", "utf8");
 
-const server = https.createServer({ key, cert }, app);
-const port = process.env.PORT || 4000;
+// // const server = https.createServer({ key, cert }, app);
+// const port = process.env.PORT || 4000;
 
 //making a  endpoint.
 app.get("/test", (req, res) => {
@@ -77,8 +80,34 @@ app.use("/api/review", require("./routes/reviewRoutes"));
 //   }
 // });
 
-server.listen(port, () =>
-  console.log(`Server is running on port ${port} with SSL certificate.`)
-);
+// HTTPS options (read your certificate and key files)
+const httpsOptions = {
+  key: fs.readFileSync("certificates/localhost.key"),
+  cert: fs.readFileSync("certificates/localhost.crt"),
+};
+// Create HTTPS server
+const httpsServer = https.createServer(httpsOptions, app);
+
+const httpApp = express();
+httpApp.use((req, res) => {
+  res.redirect(`https://${req.headers.host}${req.url}`);
+});
+
+const httpServer = http.createServer(httpApp);
+// Define ports
+const HTTPS_PORT = process.env.HTTPS_PORT || 443; // Default HTTPS port is 443
+const HTTP_PORT = process.env.PORT || 80; // Default HTTP port is 80
+
+// // Start HTTP server for redirecting to HTTPS
+// httpServer.listen(HTTP_PORT, () => {
+//   console.log(
+//     `HTTP Server is running on port ${HTTP_PORT} and redirecting to HTTPS`
+//   );
+// });
+
+// Start HTTPS server
+httpsServer.listen(HTTPS_PORT, () => {
+  console.log(`HTTPS Server is running on port ${HTTPS_PORT}`);
+});
 
 module.exports = app;
