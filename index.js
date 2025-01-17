@@ -18,21 +18,38 @@ const multiparty = require("connect-multiparty");
 // creating an express application.
 const app = express();
 app.use(express.json());
+// app.use((req, res, next) => {
+//   res.setHeader(
+//     "Content-Security-Policy",
+//     "default-src 'self'; " +
+//       "script-src 'self' 'unsafe-eval'; " +
+//       "style-src 'self' 'unsafe-inline'; " +
+//       "img-src 'self' data:; " +
+//       "font-src 'self'; " +
+//       "connect-src 'self' ws://localhost:3000; " +
+//       "object-src 'none'; " +
+//       "frame-ancestors 'none'; " +
+//       "base-uri 'self'; " +
+//       "form-action 'self'; " +
+//       "upgrade-insecure-requests"
+//   );
+//   next();
+// });
 
 //configure cors policy
 const corsOptions = {
-  origin: true,
+  origin: ["https://localhost:3000"],
   credentials: true,
   optionSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
+// config from data
+app.use(acceptFOrmData());
 app.use(multiparty());
 
 //dotenv configuration
 dotenv.config();
 
-// config from data
-app.use(acceptFOrmData());
 // make static form data
 app.use(express.static("./public"));
 
@@ -82,8 +99,8 @@ app.use("/api/review", require("./routes/reviewRoutes"));
 
 // HTTPS options (read your certificate and key files)
 const httpsOptions = {
-  key: fs.readFileSync("certificates/localhost.key"),
-  cert: fs.readFileSync("certificates/localhost.crt"),
+  key: fs.readFileSync("certificates/server.key"),
+  cert: fs.readFileSync("certificates/server.crt"),
 };
 // Create HTTPS server
 const httpsServer = https.createServer(httpsOptions, app);

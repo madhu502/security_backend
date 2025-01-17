@@ -1,95 +1,60 @@
 const jwt = require("jsonwebtoken");
 
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(400).json({
+      success: false,
+      message: "Auth Header not found!",
+    });
+  }
+
+  const token = authHeader.split(" ")[1];
+  if (!token || token === "") {
+    return res.status(400).json({
+      success: false,
+      message: "Token not found!",
+    });
+  }
+
+  try {
+    const decodedUserData = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decodedUserData;
+    next();
+  } catch (error) {
+    console.error("JWT verification error:", error);
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Token expired. Please log in again!",
+      });
+    }
+    res.status(400).json({
+      success: false,
+      message: "Invalid token. Not Authenticated!",
+    });
+  }
+};
+
+// Auth Guard
 const authGuard = (req, res, next) => {
-    // check incomming Data
-    console.log(req.headers)
+  verifyToken(req, res, next);
+};
 
-    // get authorization data from headers
-    const authHeader = req.headers.authorization;
-
-    // check or validate 
-    if (!authHeader) {
-        return res.status(400).json({
-            succcess: false,
-            message: "Auth Header not found!"
-        })
-    }
-    // split the data(format: 'Bearer token-fghjk')- only token
-    const token = authHeader.split(' ')[1]
-
-    // if token not found stop the process (res)
-    if (!token || token === "") {
-        return res.status(400).json({
-            succcess: false,
-            message: "Token not found!"
-        })
-    }
-    // verify
-    try {
-        const decodeUserData = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decodeUserData;
-        next()
-
-    } catch (error) {
-        console.log(error)
-        res.status(400).json({
-            success: false,
-            message: "Not Authenticated!"
-        })
-    }
-    // if verified :next (function in controller)
-    // not verifird :cot auth
-
-}
-
-// Admin Guard 
+// Admin Guard
 const adminGuard = (req, res, next) => {
-    // check incomming Data
-    console.log(req.headers)
-
-    // get authorization data from headers
-    const authHeader = req.headers.authorization;
-
-    // check or validate 
-    if (!authHeader) {
-        return res.status(400).json({
-            succcess: false,
-            message: "Auth Header not found!"
-        })
+  verifyToken(req, res, () => {
+    if (req.user.isAdmin === false) {
+      return res.status(400).json({
+        success: false,
+        message: "Permission Denied!",
+      });
     }
-    // split the data(format: 'Bearer token-fghjk')- only token
-    const token = authHeader.split(' ')[1]
-
-    // if token not found stop the process (res)
-    if (!token || token === "") {
-        return res.status(400).json({
-            succcess: false,
-            message: "Token not found!"
-        })
-    }
-    // verify
-    try {
-        const decodeUserData = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decodeUserData; // user info :id and isAdmin
-        if (req.user.isAdmin === false) {
-            return res.status(400).json({
-                success: false,
-                message: "Permission Delined!"
-            })
-        }
-        next()
-
-    } catch (error) {
-        console.log(error)
-        res.status(400).json({
-            success: false,
-            message: "Not Authenticated!"
-        })
-    }
-
-}
+    next();
+  });
+};
 
 module.exports = {
-    authGuard,
-    adminGuard
-}
+  authGuard,
+  adminGuard,
+};
