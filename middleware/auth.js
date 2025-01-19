@@ -54,7 +54,28 @@ const adminGuard = (req, res, next) => {
   });
 };
 
+// Utility function to assess password strength
+const assessPasswordStrength = (password) => {
+  const strength = {
+      0: "Weak",
+      1: "Fair",
+      2: "Good",
+      3: "Strong"
+  };
+  let score = 0;
+
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[@$!%*?&]/.test(password)) score++;
+
+  return strength[score > 3 ? 3 : score];
+};
+
 module.exports = {
   authGuard,
   adminGuard,
+  assessPasswordStrength
 };
