@@ -231,11 +231,26 @@ const loginUser = async (req, res) => {
 
     // not compare error saying password is incorrect.
     if (!isValidPassword) {
+      user.loginAttempts += 1;
+      let lockMessage = "";
+      if (user.loginAttempts >= 5) {
+        user.lockUntil = new Date(Date.now() + 30 * 60 * 1000); // lock for 30 minutes
+        lockMessage = ` Your account is now locked until ${user.lockUntil}.`;
+      }
+      await user.save();
       return res.json({
         success: false,
-        message: "Invalid password",
+        message: `Invalid credentials. You have ${
+          5 - user.loginAttempts
+        } attempts left.${lockMessage}`,
+        remainingAttempts: 5 - user.loginAttempts,
+        lockUntil: user.lockUntil,
       });
     }
+    user.loginAttempts = 0;
+    user.lockUntil = null;
+    await user.save();
+
     //token ( generate - userdata + KEY)
     const token = await jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 
