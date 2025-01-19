@@ -60,6 +60,36 @@ const assessPasswordStrength = (password) => {
   return strength[score > 3 ? 3 : score];
 };
 
+const verifyEmail = async (req, res) => {
+  try {
+      const token = req.params.token;
+
+      // Hash the received token to compare with the stored one
+      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+      // Find the user with the matching token and ensure it hasn't expired
+      const user = await User.findOne({
+          emailVerificationToken: hashedToken,
+          emailVerificationTokenExpire: { $gt: Date.now() } // Ensure the token hasn't expired
+      });
+
+      if (!user) {
+          return res.json({ success: false, message: "Invalid or expired token" });
+      }
+
+      // Mark the user's email as verified
+      user.isEmailVerified = true;
+      user.emailVerificationToken = undefined; // Clear the token fields
+      user.emailVerificationTokenExpire = undefined;
+
+      await user.save();
+
+      res.json({ success: true, message: "Email verified successfully" });
+  } catch (error) {
+      console.error("Verification Error:", error);
+      res.json({ success: false, message: "Server error" });
+  }
+};
 
 const createUser = async (req, res) => {
   //Step one : Check incoming data
