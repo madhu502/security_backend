@@ -23,15 +23,22 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  resetPasswordOTP: {
+  isAdmin: {
+    type: Boolean,
+    default: false,
+  },
+  loginAttempts: {
     type: Number,
-    default: null,
+    default: 0,
   },
-  resetPasswordExpires: {
+  lockUntil: {
     type: Date,
-    default: null,
   },
-
+  isEmailVerified: { type: Boolean, default: false },
+  emailVerificationToken: String,
+  emailVerificationTokenExpire: Date,
+  resetPasswordToken: String,
+  resetPasswordExpire: Date,
   isAdmin: {
     type: Boolean,
     default: false,

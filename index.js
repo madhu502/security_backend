@@ -38,7 +38,7 @@ app.use(express.json());
 
 //configure cors policy
 const corsOptions = {
-  origin: ["https://localhost:3000"],
+  origin: true,
   credentials: true,
   optionSuccessStatus: 200,
 };
