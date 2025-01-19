@@ -252,7 +252,11 @@ const loginUser = async (req, res) => {
     await user.save();
 
     //token ( generate - userdata + KEY)
-    const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET,{ expiresIn: '1h' });
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
     // sending the response ( token, user data,)
     res.json({
@@ -318,8 +322,24 @@ const loginUser = async (req, res) => {
 // };
 
 const getMe = async (req, res) => {
-  const user = await userModel.findById(req.user.id).select("-password");
-  return res.status(200).json({ user });
+  const id = req.params.id;
+  if (!id) {
+    return res.json({
+      success: false,
+      message: "User ID is required!",
+    });
+  }
+  try {
+    const user = await User.findById(id);
+    return res.status(200).json({
+      success: true,
+      message: "User fetched successfully",
+      user: user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Server Error");
+  }
 };
 
 //fetch user data
