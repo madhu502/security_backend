@@ -11,8 +11,6 @@ router.post("/login", userController.loginUser);
 // forgot password
 router.post("/forgot_password", userController.forgotPassword);
 
-// verify otp and set password
-router.post("/verify_otp", userController.verifyOtpAndSetPassword);
 
 //get user profile
 router.get("/profile/:id", authGuard, userController.getUserData);

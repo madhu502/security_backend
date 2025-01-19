@@ -549,51 +549,91 @@ const getSingleUser = async (req, res) => {
   }
 };
 
-const verifyOtpAndSetPassword = async (req, res) => {
-  const { phone, otp, newPassword } = req.body;
-  if (!phone || !otp || !newPassword) {
-    return res.status(400).json({
-      success: false,
-      message: "Required fields are missing!",
-    });
-  }
+const resetPassword = async (req, res) => {
+  const resetToken = req.params.token;
+
+  // Hash the token and compare it to the database
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
 
   try {
-    const user = await userModel.findOne({ phone: phone });
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
 
-    if (user.resetPasswordOTP != otp) {
-      return res.status(400).json({
+    if (!user) {
+      return res.json({
         success: false,
-        message: "Invalid OTP!",
+        message: "Invalid token or token has expired.",
       });
     }
 
-    if (user.resetPasswordExpires < Date.now()) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP Expired!",
-      });
-    }
+    // Set the new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(req.body.password, salt);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
 
-    const randomSalt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, randomSalt);
-
-    user.password = hashedPassword;
-    // user.password =newPassword;
     await user.save();
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "OTP Verified and Password Updated!",
+      message: "Password reset successful.",
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: "Server Error!",
-    });
+    console.error("Reset password error:", error);
+    res.json({ success: false, message: "Server error." });
   }
 };
+
+// const verifyOtpAndSetPassword = async (req, res) => {
+//   const { phone, otp, newPassword } = req.body;
+//   if (!phone || !otp || !newPassword) {
+//     return res.status(400).json({
+//       success: false,
+//       message: "Required fields are missing!",
+//     });
+//   }
+
+//   try {
+//     const user = await userModel.findOne({ phone: phone });
+
+//     if (user.resetPasswordOTP != otp) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid OTP!",
+//       });
+//     }
+
+//     if (user.resetPasswordExpires < Date.now()) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "OTP Expired!",
+//       });
+//     }
+
+//     const randomSalt = await bcrypt.genSalt(10);
+//     const hashedPassword = await bcrypt.hash(newPassword, randomSalt);
+
+//     user.password = hashedPassword;
+//     // user.password =newPassword;
+//     await user.save();
+
+//     res.status(200).json({
+//       success: true,
+//       message: "OTP Verified and Password Updated!",
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server Error!",
+//     });
+//   }
+// };
 const getToken = async (req, res) => {
   try {
     console.log(req.body);
@@ -681,7 +721,11 @@ module.exports = {
   getToken,
   updateUser,
   forgotPassword,
-  verifyOtpAndSetPassword,
+  // verifyOtpAndSetPassword,
   getSingleUser,
   validatePassword,
+  resetPassword,
+  verifyEmail,
+  checkPasswordHistory,
+  assessPasswordStrength,
 };
