@@ -3,6 +3,21 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendOtp = require("../service/sendOtp");
 
+const validatePassword = (password) => {
+  const minLength = 8;
+  const complexityPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,12}$/;
+
+  if (password.length < minLength ) {
+      return { valid: false, message: 'Password must be more than 8 characters long.' };
+  }
+
+  if (!complexityPattern.test(password)) {
+      return { valid: false, message: 'Password must include uppercase, lowercase, number, and special character.' };
+  }
+
+  return { valid: true };
+};
+
 const createUser = async (req, res) => {
   //Step one : Check incoming data
   console.log(req.body);
@@ -475,4 +490,6 @@ module.exports = {
   forgotPassword,
   verifyOtpAndSetPassword,
   getSingleUser,
+  validatePassword,
+  
 };
