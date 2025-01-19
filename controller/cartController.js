@@ -1,92 +1,60 @@
-const multer = require("multer");
 const Cart = require("../model/cartModel");
 
-const upload = multer({ dest: "uploads/" });
-
 const addToCart = async (req, res) => {
+  const id = req.user.id;
+
+  // destructure data
+  const { userID, productID, quantity } = req.body;
+
+  // validate the data
+  if (!userID || !productID) {
+    return res.json({
+      success: false,
+      message: "Please, Login to add to cart",
+    });
+  }
+
+  // try-catch block
   try {
-    const { userID, productID, productPrice, quantity } = req.body;
-    const productImage = req.file ? req.file.path : null; // Save the uploaded file path
+    const existingInCart = await Cart.findOne({
+      userID: id,
+      productID: productID,
+      status: "active",
+    });
 
-    // Create cart data with the uploaded image path
-    const cartData = {
-      userID,
-      productID,
-      productPrice,
-      quantity,
-      productImage, // Store image path in the database
-    };
+    if (existingInCart) {
+      //if the product already exists in the cart and the quantity is 1 then increment the quantity by 1
+      // return Cart.findByIdAndUpdate(existingInCart._id, {
+      //     $inc: { quantity: quantity }
+      // }, { new: true });
 
-    // Save cart data to database (update as per your logic)
-    // const newCart = new Cart(cartData);
-    // await newCart.save();
+      return res.json({
+        success: false,
+        message: "This item is already in cart",
+      });
+    }
+
+    // Create a new cart entry
+    const newCart = new Cart({
+      userID: id,
+      productID: productID,
+      quantity: quantity,
+      // quantity: parseInt(quantity, 10),
+    });
+
+    // Save the new cart
+    await newCart.save();
 
     res.status(200).json({
       success: true,
-      message: "Product added to cart successfully",
-      cart: cartData,
+      message: "Master piece added to cart successfully",
+      data: newCart,
     });
   } catch (error) {
-    console.error("Error adding to cart:", error);
-    res.status(500).json({ error: "Server Error" });
+    console.log(error);
+    res.status(500).json("Server Error");
   }
 };
-
-// const addToCart = async (req, res) => {
-//   const id = req.user.id;
-
-//   // destructure data
-//   const { userID, productID, quantity } = req.body;
-
-//   // validate the data
-//   if (!userID || !productID) {
-//     return res.json({
-//       success: false,
-//       message: "Please, Login to add to cart",
-//     });
-//   }
-
-//   // try-catch block
-//   try {
-//     const existingInCart = await Cart.findOne({
-//       userID: id,
-//       productID: productID,
-//       status: "active",
-//     });
-
-//     if (existingInCart) {
-//       //if the product already exists in the cart and the quantity is 1 then increment the quantity by 1
-//       // return Cart.findByIdAndUpdate(existingInCart._id, {
-//       //     $inc: { quantity: quantity }
-//       // }, { new: true });
-
-//       return res.json({
-//         success: false,
-//         message: "This item is already in cart",
-//       });
-//     }
-
-//     // Create a new cart entry
-//     const newCart = new Cart({
-//       userID: id,
-//       productID: productID,
-//       quantity: quantity,
-//       // quantity: parseInt(quantity, 10),
-//     });
-
-//     // Save the new cart
-//     await newCart.save();
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Master piece added to cart successfully",
-//       data: newCart,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json("Server Error");
-//   }
-// };
 
 //get all items in the cart
 const getCartByUserID = async (req, res) => {

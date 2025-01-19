@@ -13,7 +13,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 // importing express-fileupload
 const acceptFOrmData = require("express-fileupload");
-const multiparty = require("connect-multiparty");
+// const multiparty = require("connect-multiparty");
 
 // creating an express application.
 const app = express();
@@ -45,7 +45,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 // config from data
 app.use(acceptFOrmData());
-app.use(multiparty());
+// app.use(multiparty());
 
 //dotenv configuration
 dotenv.config();
