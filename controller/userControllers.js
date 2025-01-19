@@ -28,6 +28,39 @@ const validatePassword = (password) => {
   return { valid: true };
 };
 
+// Utility function to check password history
+const checkPasswordHistory = async (userId, newPassword) => {
+  const user = await Users.findById(userId);
+  for (const oldPassword of user.passwordHistory) {
+      const isMatch = await bcrypt.compare(newPassword, oldPassword);
+      if (isMatch) {
+          return false;
+      }
+  }
+  return true;
+};
+
+// Utility function to assess password strength (for real-time feedback)
+const assessPasswordStrength = (password) => {
+  const strength = {
+      0: "Weak",
+      1: "Fair",
+      2: "Good",
+      3: "Strong"
+  };
+  let score = 0;
+
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[@$!%*?&]/.test(password)) score++;
+
+  return strength[score > 3 ? 3 : score];
+};
+
+
 const createUser = async (req, res) => {
   //Step one : Check incoming data
   console.log(req.body);
