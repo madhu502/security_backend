@@ -5,14 +5,22 @@ const sendOtp = require("../service/sendOtp");
 
 const validatePassword = (password) => {
   const minLength = 8;
-  const complexityPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,12}$/;
+  const complexityPattern =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,12}$/;
 
-  if (password.length < minLength ) {
-      return { valid: false, message: 'Password must be more than 8 characters long.' };
+  if (password.length < minLength) {
+    return {
+      valid: false,
+      message: "Password must be more than 8 characters long.",
+    };
   }
 
   if (!complexityPattern.test(password)) {
-      return { valid: false, message: 'Password must include uppercase, lowercase, number, and special character.' };
+    return {
+      valid: false,
+      message:
+        "Password must include uppercase, lowercase, number, and special character.",
+    };
   }
 
   return { valid: true };
@@ -32,6 +40,15 @@ const createUser = async (req, res) => {
       //in json format
       success: false,
       message: "Please fill up all the given fields!",
+    });
+  }
+
+  // Validate password
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.valid) {
+    return res.json({
+      success: false,
+      message: passwordValidation.message,
     });
   }
 
@@ -81,66 +98,61 @@ const createUser = async (req, res) => {
 };
 // login API Creation
 const loginUser = async (req, res) => {
-    //check incoming data
-    console.log(req.body)
-    // destructuring
-    const { email, password } = req.body;
+  //check incoming data
+  console.log(req.body);
+  // destructuring
+  const { email, password } = req.body;
 
-    //validation
-    if (!email || !password) {
-        return res.json({
-            "success": false,
-            "message": "Please enter all fields!"
-        })
+  //validation
+  if (!email || !password) {
+    return res.json({
+      success: false,
+      message: "Please enter all fields!",
+    });
+  }
+
+  //try catch
+  try {
+    // find user by email
+    const user = await userModel.findOne({ email: email });
+    // found data : first name, lastname, email, password
+
+    // not fount the email( error message saying user doesnt exist)
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User does not exist.",
+      });
     }
 
-    //try catch
-    try {
-        // find user by email
-        const user = await userModel.findOne({ email: email })
-        // found data : first name, lastname, email, password
+    // compare the password.( using bycript)
+    const isValidPassword = await bcrypt.compare(password, user.password);
 
-        // not fount the email( error message saying user doesnt exist)
-        if (!user) {
-            return res.json({
-                "success": false,
-                "message": "User does not exist."
-            })
-        }
-
-        // compare the password.( using bycript)
-        const isValidPassword = await bcrypt.compare(password, user.password)
-
-        // not compare error saying password is incorrect.
-        if (!isValidPassword) {
-            return res.json({
-                "success": false,
-                "message": "Invalid password"
-            })
-        }
-        //token ( generate - userdata + KEY)
-        const token = await jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET
-        )
-
-        // sending the response ( token, user data,)
-        res.json({
-            success: true,
-            "message": "user logined successfull",
-            token: token,
-            "userData": user,
-        })
-
-    } catch (error) {
-        console.log(error)
-        return res.json({
-            "success": false,
-            "message": "Internal server error."
-        })
+    // not compare error saying password is incorrect.
+    if (!isValidPassword) {
+      return res.json({
+        success: false,
+        message: "Invalid password",
+      });
     }
+    //token ( generate - userdata + KEY)
+    const token = await jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 
-}
+    // sending the response ( token, user data,)
+    res.json({
+      success: true,
+      message: "user logined successfull",
+      token: token,
+      userData: user,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
 
 // const loginUser = async (req, res) => {
 //   console.log(req.body);
@@ -491,5 +503,4 @@ module.exports = {
   verifyOtpAndSetPassword,
   getSingleUser,
   validatePassword,
-  
 };
