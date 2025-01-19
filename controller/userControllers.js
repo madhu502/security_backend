@@ -427,51 +427,97 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-const forgotPassword = async (req, res) => {
-  const { phone } = req.body;
+// const forgotPassword = async (req, res) => {
+//   const { phone } = req.body;
 
-  if (!phone) {
-    return res.status(400).json({
-      success: false,
-      message: "Provide your phone number!",
-    });
-  }
+//   if (!phone) {
+//     return res.status(400).json({
+//       success: false,
+//       message: "Provide your phone number!",
+//     });
+//   }
+
+//   try {
+//     const user = await userModel.findOne({ phone: phone });
+//     if (!user) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "User Not Found!",
+//       });
+//     }
+
+//     const otp = Math.floor(100000 + Math.random() * 900000);
+
+//     const expiryDate = Date.now() + 360000;
+
+//     user.resetPasswordOTP = otp;
+//     user.resetPasswordExpires = expiryDate;
+//     await user.save();
+
+//     const isSent = await sendOtp(phone, otp);
+//     if (!isSent) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Error Sending OTP Code!",
+//       });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       message: "OTP Send Successfully!",
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server Error!",
+//     });
+//   }
+// };
+
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
 
   try {
-    const user = await userModel.findOne({ phone: phone });
+    const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({
+      return res.json({
         success: false,
-        message: "User Not Found!",
+        message: "User not found.",
       });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000);
+    // Generate a reset token
+    const resetToken = crypto.randomBytes(20).toString("hex");
 
-    const expiryDate = Date.now() + 360000;
+    // Hash and set the reset token in the database
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // Token expires in 10 minutes
 
-    user.resetPasswordOTP = otp;
-    user.resetPasswordExpires = expiryDate;
     await user.save();
 
-    const isSent = await sendOtp(phone, otp);
-    if (!isSent) {
-      return res.status(400).json({
-        success: false,
-        message: "Error Sending OTP Code!",
-      });
-    }
+    // Create reset URL
+    const resetUrl = `${req.protocol}://localhost:3000/resetPassword/${resetToken}`;
 
-    res.status(200).json({
+    // Send the email
+    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+
+    await sendEmail({
+      email: user.email,
+      subject: "Password Reset Token",
+      message,
+    });
+
+    res.json({
       success: true,
-      message: "OTP Send Successfully!",
+      message: "Email sent.",
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      success: false,
-      message: "Server Error!",
-    });
+    console.error("Forgot password error:", error);
+    res.json({ success: false, message: "Server error." });
   }
 };
 
