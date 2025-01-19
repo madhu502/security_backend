@@ -44,6 +44,9 @@ const userSchema = new mongoose.Schema({
     default: false,
   },
 });
+userSchema.virtual('isLocked').get(function () {
+  return !!(this.lockUntil && this.lockUntil > Date.now());
+});
 
 const User = mongoose.model("users", userSchema);
 
