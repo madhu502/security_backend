@@ -8,7 +8,7 @@ const {
 } = require("../middleware/auth");
 
 // Creating user registration route
-router.post("/create", validatePasswordStrength, userController.createUser);
+router.post("/register", validatePasswordStrength, userController.createUser);
 
 //login routes
 router.post(
@@ -19,7 +19,7 @@ router.post(
 );
 
 // forgot password
-router.post("/forgot_password", userController.forgotPassword);
+router.post("/forgotPassword", userController.forgotPassword);
 // Reset password route
 router.put("/resetPassword/:token", userController.resetPassword);
 router.put("/verifyEmail/:token", userController.verifyEmail);

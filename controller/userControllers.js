@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const sendOtp = require("../service/sendOtp");
 const User = require("../model/userModel");
 const crypto = require("crypto");
+const sendEmail = require("../middleware/sendEmail");
 
 const validatePassword = (password) => {
   const minLength = 8;
@@ -92,17 +93,12 @@ const verifyEmail = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-  //Step one : Check incoming data
-  console.log(req.body);
   //Step two : Destrucutre the incoming data (i.e., firstname,lastname,age)
-  const { firstname, lastname, phone, email, password } = req.body;
+  const { firstname, lastname, email, password } = req.body;
 
   //Step three : Validate the data (Check if empty, stop the process and send response)
-  if (!firstname || !lastname || !email || !phone || !password) {
-    // res.send("Please fill up all the given fields!");
-    //res.status(400).json()
+  if (!firstname || !lastname || !email || !password) {
     return res.json({
-      //in json format
       success: false,
       message: "Please fill up all the given fields!",
     });
@@ -363,7 +359,6 @@ const getUserData = async (req, res) => {
         firstname: user.firstname,
         lastname: user.lastname,
         email: user.email,
-        phone: user.phone,
       },
     });
     console.log(user);
@@ -379,7 +374,7 @@ const getUserData = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { firstname, lastname, email, phone } = req.body || {};
+    const { firstname, lastname, email } = req.body || {};
 
     // Checking if the user exists
     const user = await userModel.findById(req.params.id);
@@ -394,7 +389,6 @@ const updateUser = async (req, res) => {
     user.firstname = firstname || user.firstname;
     user.lastname = lastname || user.lastname;
     user.email = email || user.email;
-    user.phone = phone || user.phone;
 
     // Save updated user data
     const updatedUser = await user.save();
@@ -581,7 +575,7 @@ const resetPassword = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Password reset successful.",
+      message: "Password reset successfull.",
     });
   } catch (error) {
     console.error("Reset password error:", error);
