@@ -32,10 +32,10 @@ const validatePassword = (password) => {
 const checkPasswordHistory = async (userId, newPassword) => {
   const user = await Users.findById(userId);
   for (const oldPassword of user.passwordHistory) {
-      const isMatch = await bcrypt.compare(newPassword, oldPassword);
-      if (isMatch) {
-          return false;
-      }
+    const isMatch = await bcrypt.compare(newPassword, oldPassword);
+    if (isMatch) {
+      return false;
+    }
   }
   return true;
 };
@@ -43,10 +43,10 @@ const checkPasswordHistory = async (userId, newPassword) => {
 // Utility function to assess password strength (for real-time feedback)
 const assessPasswordStrength = (password) => {
   const strength = {
-      0: "Weak",
-      1: "Fair",
-      2: "Good",
-      3: "Strong"
+    0: "Weak",
+    1: "Fair",
+    2: "Good",
+    3: "Strong",
   };
   let score = 0;
 
@@ -62,32 +62,32 @@ const assessPasswordStrength = (password) => {
 
 const verifyEmail = async (req, res) => {
   try {
-      const token = req.params.token;
+    const token = req.params.token;
 
-      // Hash the received token to compare with the stored one
-      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    // Hash the received token to compare with the stored one
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-      // Find the user with the matching token and ensure it hasn't expired
-      const user = await User.findOne({
-          emailVerificationToken: hashedToken,
-          emailVerificationTokenExpire: { $gt: Date.now() } // Ensure the token hasn't expired
-      });
+    // Find the user with the matching token and ensure it hasn't expired
+    const user = await User.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationTokenExpire: { $gt: Date.now() }, // Ensure the token hasn't expired
+    });
 
-      if (!user) {
-          return res.json({ success: false, message: "Invalid or expired token" });
-      }
+    if (!user) {
+      return res.json({ success: false, message: "Invalid or expired token" });
+    }
 
-      // Mark the user's email as verified
-      user.isEmailVerified = true;
-      user.emailVerificationToken = undefined; // Clear the token fields
-      user.emailVerificationTokenExpire = undefined;
+    // Mark the user's email as verified
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined; // Clear the token fields
+    user.emailVerificationTokenExpire = undefined;
 
-      await user.save();
+    await user.save();
 
-      res.json({ success: true, message: "Email verified successfully" });
+    res.json({ success: true, message: "Email verified successfully" });
   } catch (error) {
-      console.error("Verification Error:", error);
-      res.json({ success: false, message: "Server error" });
+    console.error("Verification Error:", error);
+    res.json({ success: false, message: "Server error" });
   }
 };
 
@@ -167,13 +167,14 @@ const createUser = async (req, res) => {
 
     // Send verification email
     await sendEmail({
-        email: newUser.email,
-        subject: 'Email Verification',
-        message
+      email: newUser.email,
+      subject: "Email Verification",
+      message,
     });
     res.json({
       success: true,
-      message: " User created successfully! Please verify your email to complete registration.",
+      message:
+        " User created successfully! Please verify your email to complete registration.",
     });
   } catch (error) {
     console.log(error);
@@ -185,8 +186,6 @@ const createUser = async (req, res) => {
 };
 // login API Creation
 const loginUser = async (req, res) => {
-  //check incoming data
-  console.log(req.body);
   // destructuring
   const { email, password } = req.body;
 
@@ -209,6 +208,21 @@ const loginUser = async (req, res) => {
       return res.json({
         success: false,
         message: "User does not exist.",
+      });
+    }
+
+    if (!user.isEmailVerified) {
+      return res.json({
+        success: false,
+        message: "Please verify your email before logging in.",
+      });
+    }
+
+    if (user.isLocked) {
+      return res.json({
+        success: false,
+        message: `Account is locked. Please try again later. It will be unlocked at ${user.lockUntil}.`,
+        lockUntil: user.lockUntil,
       });
     }
 
