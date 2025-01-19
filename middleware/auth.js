@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const User = require("../model/userModel");
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -53,6 +54,41 @@ const adminGuard = (req, res, next) => {
     next();
   });
 };
+const checkPasswordExpiry = async (req, res, next) => {
+  const { email } = req.body;
+  try {
+      const user = await User.findOne({ email });
+      if (!user) {
+          return res.json({
+              success: false,
+              message: 'User not found.'
+          });
+      }
+      const passwordAge = (new Date() - new Date(user.passwordChangedAt)) / (1000 * 60 * 60 * 24); // in days
+      if (passwordAge > 90) { 
+          return res.json({
+              success: false,
+              message: 'Password has expired. Please reset your password.'
+          });
+      }
+      next();
+  } catch (error) {
+      console.log(error);
+      res.json({ success: false, message: 'Server error.' });
+  }
+};
+const validatePasswordStrength = (req, res, next) => {
+  const { password } = req.body;
+
+  const strength = assessPasswordStrength(password);
+  if (strength === "Weak") {
+      return res.json({
+          success: false,
+          message: 'Password is too weak. Please choose a stronger password.'
+      });
+  }
+  next();
+};
 
 // Utility function to assess password strength
 const assessPasswordStrength = (password) => {
@@ -77,5 +113,7 @@ const assessPasswordStrength = (password) => {
 module.exports = {
   authGuard,
   adminGuard,
-  assessPasswordStrength
+  assessPasswordStrength,
+  validatePasswordStrength,
+  checkPasswordExpiry
 };
