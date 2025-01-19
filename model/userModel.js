@@ -23,6 +23,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  passwordHistory: [
+    {
+      type: String,
+    },
+  ],
+  passwordChangedAt: {
+    type: Date,
+    default: Date.now,
+  },
   isAdmin: {
     type: Boolean,
     default: false,
@@ -44,7 +53,7 @@ const userSchema = new mongoose.Schema({
     default: false,
   },
 });
-userSchema.virtual('isLocked').get(function () {
+userSchema.virtual("isLocked").get(function () {
   return !!(this.lockUntil && this.lockUntil > Date.now());
 });
 
