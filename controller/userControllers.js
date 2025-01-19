@@ -160,9 +160,20 @@ const createUser = async (req, res) => {
 
     //Step 5.2.2 : Save to Database.
     await newUser.save();
+
+    // Create verification URL
+    const verificationUrl = `${req.protocol}://localhost:3000/verify-email/${verificationToken}`;
+    const message = `Please verify your email by clicking on the following link: \n\n ${verificationUrl}`;
+
+    // Send verification email
+    await sendEmail({
+        email: newUser.email,
+        subject: 'Email Verification',
+        message
+    });
     res.json({
       success: true,
-      message: " User created successfully!",
+      message: " User created successfully! Please verify your email to complete registration.",
     });
   } catch (error) {
     console.log(error);
