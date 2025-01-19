@@ -2,6 +2,8 @@ const userModel = require("../model/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendOtp = require("../service/sendOtp");
+const User = require("../model/userModel");
+const crypto = require("crypto");
 
 const validatePassword = (password) => {
   const minLength = 8;
@@ -71,16 +73,26 @@ const createUser = async (req, res) => {
 
     //Step 5.1.1 : Stop the process
     //Step 5.2(If user is not registered/ is new) :
-    const newUser = new userModel({
-      //database fields : client model
-      firstname: firstname, // given by client
-      lastname: lastname,
-      email: email,
-      phone: phone,
+    // Generate and hash email verification token
+    const verificationToken = crypto.randomBytes(20).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
+
+    // Create new user
+    const newUser = new User({
+      firstname,
+      lastname,
+      email,
       password: hashedPassword,
-      
-      // for testing
-      // password: password,
+      passwordHistory: [hashedPassword],
+      passwordChangedAt: new Date(),
+      loginAttempts: 0,
+      lockUntil: null,
+      isEmailVerified: false,
+      emailVerificationToken: hashedToken,
+      emailVerificationTokenExpire: Date.now() + 10 * 60 * 1000, // Token expires in 10 minutes
     });
 
     //Step 5.2.2 : Save to Database.
