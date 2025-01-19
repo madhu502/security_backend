@@ -252,7 +252,7 @@ const loginUser = async (req, res) => {
     await user.save();
 
     //token ( generate - userdata + KEY)
-    const token = await jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET,{ expiresIn: '1h' });
 
     // sending the response ( token, user data,)
     res.json({
@@ -262,7 +262,6 @@ const loginUser = async (req, res) => {
       userData: user,
     });
   } catch (error) {
-    console.log(error);
     return res.json({
       success: false,
       message: "Internal server error.",
