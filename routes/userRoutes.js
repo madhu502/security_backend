@@ -1,22 +1,34 @@
 const router = require("express").Router();
 const userController = require("../controller/userControllers");
-const { authGuard } = require("../middleware/auth");
+const {
+  authGuard,
+  validatePasswordStrength,
+  checkPasswordExpiry,
+  checkAccountLockout,
+} = require("../middleware/auth");
 
 // Creating user registration route
-router.post("/create", userController.createUser);
+router.post("/create", validatePasswordStrength, userController.createUser);
 
 //login routes
-router.post("/login", userController.loginUser);
+router.post(
+  "/login",
+  checkAccountLockout,
+  checkPasswordExpiry,
+  userController.loginUser
+);
 
 // forgot password
 router.post("/forgot_password", userController.forgotPassword);
-
+// Reset password route
+router.put("/resetPassword/:token", userController.resetPassword);
+router.put("/verifyEmail/:token", userController.verifyEmail);
 
 //get user profile
 router.get("/profile/:id", authGuard, userController.getUserData);
 router.get("/user/:id", userController.getUserByID);
 router.get("/all_user", userController.getAllUsers);
-router.get("/single_user", userController.getSingleUser);
+router.get("/single_user", authGuard, userController.getSingleUser);
 
 //update user profile
 router.put("/update/:id", authGuard, userController.updateUser);
