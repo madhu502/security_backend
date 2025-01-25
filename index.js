@@ -16,6 +16,7 @@ const acceptFOrmData = require("express-fileupload");
 // const multiparty = require("connect-multiparty");
 
 // creating an express application.
+const path = require("path");
 const app = express();
 app.use(express.json());
 // app.use((req, res, next) => {
@@ -51,7 +52,7 @@ app.use(acceptFOrmData());
 dotenv.config();
 
 // make static form data
-app.use(express.static("./public"));
+app.use(express.static(path.join(__dirname, "./public")));
 
 //defining the port .
 const PORT = process.env.PORT;

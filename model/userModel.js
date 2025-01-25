@@ -43,10 +43,7 @@ const userSchema = new mongoose.Schema({
   emailVerificationTokenExpire: Date,
   resetPasswordToken: String,
   resetPasswordExpire: Date,
-  isAdmin: {
-    type: Boolean,
-    default: false,
-  },
+ 
 });
 userSchema.virtual("isLocked").get(function () {
   return !!(this.lockUntil && this.lockUntil > Date.now());

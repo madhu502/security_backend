@@ -57,71 +57,72 @@ const User = require("../model/userModel");
 const authGuard = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
-      return res.json({
-          success: false,
-          message: "Authorization header not found!"
-      });
+    return res.json({
+      success: false,
+      message: "Authorization header not found!",
+    });
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(" ")[1];
   if (!token) {
-      return res.json({
-          success: false,
-          message: "Token not found!"
-      });
+    return res.json({
+      success: false,
+      message: "Token not found!",
+    });
   }
 
   try {
-      const decodeUser = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decodeUser; 
-      next();
+    const decodeUser = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decodeUser;
+    next();
   } catch (error) {
-      console.log(error);
-      res.json({
-          success: false,
-          message: "Invalid Token"
-      });
+    console.log(error);
+    res.json({
+      success: false,
+      message: "Invalid Token",
+    });
   }
 };
 
 const checkAccountLockout = async (req, res, next) => {
   const { email } = req.body;
   try {
-      const user = await User.findOne({ email });
-      if (user && user.isLocked) {
-          return res.json({
-              success: false,
-              message: 'Account is locked. Please try again later.'
-          });
-      }
-      next();
+    const user = await User.findOne({ email });
+    if (user && user.isLocked) {
+      return res.json({
+        success: false,
+        message: "Account is locked. Please try again later.",
+      });
+    }
+    next();
   } catch (error) {
-      console.log(error);
-      res.json({ success: false, message: 'Server error.' });
+    console.log(error);
+    res.json({ success: false, message: "Server error." });
   }
 };
 
 const checkPasswordExpiry = async (req, res, next) => {
   const { email } = req.body;
   try {
-      const user = await User.findOne({ email });
-      if (!user) {
-          return res.json({
-              success: false,
-              message: 'User not found.'
-          });
-      }
-      const passwordAge = (new Date() - new Date(user.passwordChangedAt)) / (1000 * 60 * 60 * 24); // in days
-      if (passwordAge > 90) { 
-          return res.json({
-              success: false,
-              message: 'Password has expired. Please reset your password.'
-          });
-      }
-      next();
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+    const passwordAge =
+      (new Date() - new Date(user.passwordChangedAt)) / (1000 * 60 * 60 * 24); // in days
+    if (passwordAge > 90) {
+      return res.json({
+        success: false,
+        message: "Password has expired. Please reset your password.",
+      });
+    }
+    next();
   } catch (error) {
-      console.log(error);
-      res.json({ success: false, message: 'Server error.' });
+    console.log(error);
+    res.json({ success: false, message: "Server error." });
   }
 };
 const validatePasswordStrength = (req, res, next) => {
@@ -129,10 +130,10 @@ const validatePasswordStrength = (req, res, next) => {
 
   const strength = assessPasswordStrength(password);
   if (strength === "Weak") {
-      return res.json({
-          success: false,
-          message: 'Password is too weak. Please choose a stronger password.'
-      });
+    return res.json({
+      success: false,
+      message: "Password is too weak. Please choose a stronger password.",
+    });
   }
   next();
 };
@@ -140,10 +141,10 @@ const validatePasswordStrength = (req, res, next) => {
 // Utility function to assess password strength
 const assessPasswordStrength = (password) => {
   const strength = {
-      0: "Weak",
-      1: "Fair",
-      2: "Good",
-      3: "Strong"
+    0: "Weak",
+    1: "Fair",
+    2: "Good",
+    3: "Strong",
   };
   let score = 0;
 
@@ -163,5 +164,5 @@ module.exports = {
   assessPasswordStrength,
   validatePasswordStrength,
   checkPasswordExpiry,
-  checkAccountLockout
+  checkAccountLockout,
 };

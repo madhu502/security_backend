@@ -1,4 +1,3 @@
-const userModel = require("../model/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendOtp = require("../service/sendOtp");
@@ -31,7 +30,7 @@ const validatePassword = (password) => {
 
 // Utility function to check password history
 const checkPasswordHistory = async (userId, newPassword) => {
-  const user = await Users.findById(userId);
+  const user = await User.findById(userId);
   for (const oldPassword of user.passwordHistory) {
     const isMatch = await bcrypt.compare(newPassword, oldPassword);
     if (isMatch) {
@@ -116,7 +115,7 @@ const createUser = async (req, res) => {
   //Step four :  Error Handling (Try , Catch)
   try {
     //Step five : Check if the user is already registered or not
-    const existingUser = await userModel.findOne({ email: email });
+    const existingUser = await User.findOne({ email: email });
 
     //Step 5.1(If User found) : Send response
 
@@ -196,7 +195,7 @@ const loginUser = async (req, res) => {
   //try catch
   try {
     // find user by email
-    const user = await userModel.findOne({ email: email });
+    const user = await User.findOne({ email: email });
     // found data : first name, lastname, email, password
 
     // not fount the email( error message saying user doesnt exist)
@@ -282,7 +281,7 @@ const loginUser = async (req, res) => {
 //   }
 
 //   try {
-//     const user = await userModel.findOne({ email: email });
+//     const user = await User.findOne({ email: email });
 //     if (!user) {
 //       return res
 //         .status(400)
@@ -344,7 +343,7 @@ const getUserData = async (req, res) => {
     const userId = req.params.id; // Get user ID from request parameters
     console.log("User ID:", userId); // Log the user ID
 
-    const user = await userModel.findById(userId);
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -377,7 +376,7 @@ const updateUser = async (req, res) => {
     const { firstname, lastname, email } = req.body || {};
 
     // Checking if the user exists
-    const user = await userModel.findById(req.params.id);
+    const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -412,7 +411,7 @@ const updateUser = async (req, res) => {
 // get all users
 const getAllUsers = async (req, res) => {
   try {
-    const allusers = await userModel.find();
+    const allusers = await User.find();
     res.status(200).json({ success: true, data: allusers });
   } catch (error) {
     res
@@ -432,7 +431,7 @@ const getAllUsers = async (req, res) => {
 //   }
 
 //   try {
-//     const user = await userModel.findOne({ phone: phone });
+//     const user = await User.findOne({ phone: phone });
 //     if (!user) {
 //       return res.status(400).json({
 //         success: false,
@@ -521,7 +520,7 @@ const getSingleUser = async (req, res) => {
   // console.log(req);
   const id = req.user.userId;
   try {
-    const user = await userModel.findById(id);
+    const user = await User.findById(id);
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -593,7 +592,7 @@ const resetPassword = async (req, res) => {
 //   }
 
 //   try {
-//     const user = await userModel.findOne({ phone: phone });
+//     const user = await User.findOne({ phone: phone });
 
 //     if (user.resetPasswordOTP != otp) {
 //       return res.status(400).json({
@@ -633,7 +632,7 @@ const getToken = async (req, res) => {
     console.log(req.body);
     const { id } = req.body;
 
-    const user = await userModel.findById(id);
+    const user = await User.findById(id);
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -664,7 +663,7 @@ const getToken = async (req, res) => {
 // Get user by ID
 const getUserByID = async (req, res) => {
   try {
-    const user = await userModel.findById(req.params.id);
+    const user = await User.findById(req.params.id);
 
     if (!user) {
       return res
@@ -682,7 +681,7 @@ const getUserByID = async (req, res) => {
 //delete user
 const deleteUser = async (req, res) => {
   try {
-    const user = await userModel.findByIdAndDelete(req.params.id);
+    const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
       return res.status(400).json({
         success: false,
