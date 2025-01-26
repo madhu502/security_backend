@@ -41,6 +41,7 @@ app.use(express.json());
 const corsOptions = {
   origin: true,
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
   optionSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
