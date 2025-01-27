@@ -3,8 +3,8 @@ const categoryModel = require("../model/categoryModel");
 
 const createCategory = async (req, res) => {
   // check the incomming data
-  console.log(req.body);
-  console.log(req.files);
+  // console.log(req.body);
+  // console.log(req.files);
 
   //Destructuring the body data(json)
   const { categoryName, categoryDescription } = req.body;
@@ -52,7 +52,7 @@ const createCategory = async (req, res) => {
       data: category,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
       message: "Internal Server Error!",
@@ -69,7 +69,7 @@ const deleteCategory = async (req, res) => {
       message: "Category delete Successfully",
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
       message: "Internal Server Error!",
@@ -88,7 +88,7 @@ const getAllCaterogy = async (req, res) => {
       caterogy: allCaterogy,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
       message: "Internal Server Error!",

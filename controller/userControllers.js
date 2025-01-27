@@ -4,6 +4,27 @@ const sendOtp = require("../service/sendOtp");
 const User = require("../model/userModel");
 const crypto = require("crypto");
 const sendEmail = require("../middleware/sendEmail");
+const { z } = require("zod");
+
+// Zod validation schemas
+const registerSchema = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+});
+
+const updateSchema = z.object({
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+});
 
 const validatePassword = (password) => {
   const minLength = 8;
@@ -24,22 +45,8 @@ const validatePassword = (password) => {
         "Password must include uppercase, lowercase, number, and special character.",
     };
   }
-
   return { valid: true };
 };
-
-// Utility function to check password history
-const checkPasswordHistory = async (userId, newPassword) => {
-  const user = await User.findById(userId);
-  for (const oldPassword of user.passwordHistory) {
-    const isMatch = await bcrypt.compare(newPassword, oldPassword);
-    if (isMatch) {
-      return false;
-    }
-  }
-  return true;
-};
-
 // Utility function to assess password strength (for real-time feedback)
 const assessPasswordStrength = (password) => {
   const strength = {
@@ -91,9 +98,54 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+// Utility function to check password history
+const checkPasswordHistory = async (userId, newPassword) => {
+  const user = await User.findById(userId);
+  for (const oldPassword of user.passwordHistory) {
+    const isMatch = await bcrypt.compare(newPassword, oldPassword);
+    if (isMatch) {
+      return false;
+    }
+  }
+  return true;
+};
+
 const createUser = async (req, res) => {
   //Step two : Destrucutre the incoming data (i.e., firstname,lastname,age)
   const { firstname, lastname, email, password } = req.body;
+
+  // try {
+  //   const validated = registerSchema.parse(req.body);
+  //   const userExists = await User.findOne({ email: validated.email });
+
+  //   if (userExists) {
+  //     return next(new AppError("User already exists", 400));
+  //   }
+  //   const user = await User.create({
+  //     firstName: validated.firstName,
+  //     lastName: validated.lastName,
+  //     email: validated.email,
+  //     password: validated.password,
+  //   });
+
+  //   res.status(201).json({
+  //     status: "success",
+  //     data: {
+  //       user: {
+  //         _id: user._id,
+  //         firstName: user.firstname,
+  //         lastName: user.lastname,
+  //         email: user.email,
+  //         role: user.role,
+  //       },
+  //     },
+  //   });
+  // } catch (error) {
+  //   if (error instanceof ZodError) {
+  //     return next(new AppError(error.errors[0].message, 400));
+  //   }
+  //   next(error);
+  // }
 
   //Step three : Validate the data (Check if empty, stop the process and send response)
   if (!firstname || !lastname || !email || !password) {
@@ -172,7 +224,7 @@ const createUser = async (req, res) => {
         " User created successfully! Please verify your email to complete registration.",
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.json({
       success: false,
       message: "Internal Server Error!",
@@ -266,6 +318,55 @@ const loginUser = async (req, res) => {
       message: "Internal server error.",
     });
   }
+
+  // try {
+  //   const validated = loginSchema.parse(req.body);
+  //   const user = await User.findOne({
+  //     email: validated.email.toLowerCase(),
+  //   }).select("+password");
+
+  //   if (!user || !(await user.matchPassword(validated.password))) {
+  //     return next(new AppError("Invalid email or password", 401));
+  //   }
+
+  //   const token = user.getSignedJwtToken();
+
+  //   // Cookie options
+  //   const cookieOptions = {
+  //     expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+  //     httpOnly: true,
+  //     secure: process.env.NODE_ENV === "production",
+  //     sameSite: "strict", // Protect against CSRF Attacks
+  //   };
+
+  //   // Clear any existing cookies
+  //   res.clearCookie("jwt");
+
+  //   // Set new token cookie
+  //   res.cookie("jwt", token, cookieOptions);
+
+  //   // Remove password from output
+  //   user.password = undefined;
+
+  //   res.status(200).json({
+  //     status: "success",
+
+  //     data: {
+  //       user: {
+  //         _id: user._id,
+  //         firstName: user.firstName,
+  //         lastName: user.lastName,
+  //         email: user.email,
+  //         role: user.role,
+  //       },
+  //     },
+  //   });
+  // } catch (error) {
+  //   if (error instanceof ZodError) {
+  //     return next(new AppError(error.errors[0].message, 400));
+  //   }
+  //   next(error);
+  // }
 };
 
 // const loginUser = async (req, res) => {
@@ -332,7 +433,7 @@ const getMe = async (req, res) => {
       user: user,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json("Server Error");
   }
 };
@@ -341,7 +442,7 @@ const getMe = async (req, res) => {
 const getUserData = async (req, res) => {
   try {
     const userId = req.params.id; // Get user ID from request parameters
-    console.log("User ID:", userId); // Log the user ID
+    // console.log("User ID:", userId); // Log the user ID
 
     const user = await User.findById(userId);
     if (!user) {
@@ -360,15 +461,25 @@ const getUserData = async (req, res) => {
         email: user.email,
       },
     });
-    console.log(user);
+    // console.log(user);
   } catch (error) {
-    console.log("getUserData error:", error); // Log error
+    // console.log("getUserData error:", error); // Log error
     return res.status(500).json({
       success: false,
       message: "Internal server error",
       error: error.message,
     });
   }
+
+  // try {
+  //   const user = await User.findById(req.user.id);
+  //   res.status(200).json({
+  //     status: "success",
+  //     data: { user },
+  //   });
+  // } catch (error) {
+  //   next(error);
+  // }
 };
 
 const updateUser = async (req, res) => {
@@ -406,6 +517,32 @@ const updateUser = async (req, res) => {
       error: error.message,
     });
   }
+
+  // try {
+  //   const validated = updateSchema.parse(req.body);
+
+  //   // Update user
+  //   const updatedUser = await User.findByIdAndUpdate(
+  //     req.user.id,
+  //     { $set: validated },
+  //     { new: true, runValidators: true }
+  //   );
+
+  //   // Remove password from response
+  //   updatedUser.password = undefined;
+
+  //   res.status(200).json({
+  //     status: "success",
+  //     data: {
+  //       user: updatedUser,
+  //     },
+  //   });
+  // } catch (error) {
+  //   if (error instanceof ZodError) {
+  //     return next(new AppError(error.errors[0].message, 400));
+  //   }
+  //   next(error);
+  // }
 };
 
 // get all users
@@ -496,7 +633,7 @@ const forgotPassword = async (req, res) => {
     const resetUrl = `${req.protocol}://localhost:3000/resetPassword/${resetToken}`;
 
     // Send the email
-    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+    const message = `You are receiving this email because you has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
 
     await sendEmail({
       email: user.email,
@@ -516,7 +653,7 @@ const forgotPassword = async (req, res) => {
 
 // get single user
 const getSingleUser = async (req, res) => {
-  console.log(req.users);
+  // console.log(req.users);
   // console.log(req);
   const id = req.user.userId;
   try {
@@ -629,7 +766,7 @@ const resetPassword = async (req, res) => {
 // };
 const getToken = async (req, res) => {
   try {
-    console.log(req.body);
+    // console.log(req.body);
     const { id } = req.body;
 
     const user = await User.findById(id);
@@ -651,7 +788,7 @@ const getToken = async (req, res) => {
       token: token,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -694,12 +831,39 @@ const deleteUser = async (req, res) => {
       message: "User deleted successfully",
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
       message: "Internal Server Error!",
       error: error,
     });
+  }
+  // try {
+  //   await User.findByIdAndDelete(req.user.id);
+  //   res.status(204).json({
+  //     status: "success",
+  //     data: null,
+  //   });
+  // } catch (error) {
+  //   next(error);
+  // }
+};
+
+exports.logout = async (req, res, next) => {
+  try {
+    // Clear the JWT cookie
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    next(error);
   }
 };
 

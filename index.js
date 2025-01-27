@@ -1,50 +1,79 @@
 // importing the packages. (express.)
 const express = require("express");
-
+const helmet = require("helmet");
+const mongoSanitize = require("express-mongo-sanitize");
+const xss = require("xss-clean");
+const hpp = require("hpp");
+const compression = require("compression");
+const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const fs = require("fs");
 const https = require("https");
 const http = require("http");
-// importing the data base
-const connectDatabase = require("./database/database");
-// importing the dotenv
-const dotenv = require("dotenv");
-// importing cors  to link with frontend (its a policy)
-const cors = require("cors");
-// importing express-fileupload
-const acceptFOrmData = require("express-fileupload");
-// const multiparty = require("connect-multiparty");
 
-// creating an express application.
+const connectDatabase = require("./database/database");
+
+const dotenv = require("dotenv");
+
+const cors = require("cors");
+const logger = require("./utils/logger");
+
+const acceptFOrmData = require("express-fileupload");
+
 const path = require("path");
+const loggerMiddleware = require("./middleware/loggerMiddleware");
+
 const app = express();
-app.use(express.json());
-// app.use((req, res, next) => {
-//   res.setHeader(
-//     "Content-Security-Policy",
-//     "default-src 'self'; " +
-//       "script-src 'self' 'unsafe-eval'; " +
-//       "style-src 'self' 'unsafe-inline'; " +
-//       "img-src 'self' data:; " +
-//       "font-src 'self'; " +
-//       "connect-src 'self' ws://localhost:3000; " +
-//       "object-src 'none'; " +
-//       "frame-ancestors 'none'; " +
-//       "base-uri 'self'; " +
-//       "form-action 'self'; " +
-//       "upgrade-insecure-requests"
-//   );
-//   next();
-// });
+
+const logRoutes = require("./routes/logRoutes");
+const {
+  globalLimiter,
+  authLimiter,
+  apiLimiter,
+} = require("./middleware/rateLimiter");
+app.use(helmet());
+
+// Prevent XSS attacks
+app.use(xss());
+
+// Sanitize data
+app.use(mongoSanitize());
+
+// Prevent http param pollution
+app.use(hpp());
+
+// Compress responses
+app.use(compression());
 
 //configure cors policy
 const corsOptions = {
-  origin: true,
+  origin: "https://localhost:3000",
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  exposedHeaders: ["Content-Range", "X-Content-Range"],
+  maxAge: 600,
   optionSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
+
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+
+// cookie parser with secure options
+app.use(
+  cookieParser(process.env.COOKIE_SECRET, {
+    httpOnly: true,
+    secure: "production",
+    sameSite: "strict",
+    maxAge: 24 * 60 * 60 * 1000,
+  })
+);
+// logger middleware
+app.use(loggerMiddleware);
+
+// rate limiter
+app.use(globalLimiter);
 // config from data
 app.use(acceptFOrmData());
 // app.use(multiparty());
@@ -61,13 +90,6 @@ const PORT = process.env.PORT;
 //connecting to databas
 connectDatabase();
 
-// // Load the SSL certificate and private key
-// const key = fs.readFileSync("localhost.key", "utf8");
-// const cert = fs.readFileSync("localhost.cert", "utf8");
-
-// // const server = https.createServer({ key, cert }, app);
-// const port = process.env.PORT || 4000;
-
 //making a  endpoint.
 app.get("/test", (req, res) => {
   res.status(200);
@@ -76,6 +98,9 @@ app.get("/test", (req, res) => {
 
 //configuring routes
 app.use("/api/user", require("./routes/userRoutes"));
+app.use("/api/user/login", authLimiter);
+app.use("/api/user/register", authLimiter);
+app.use("/api", apiLimiter);
 
 app.use("/api/category", require("./routes/categoryRoutes"));
 app.use("/api/product", require("./routes/productRoutes"));
@@ -85,19 +110,7 @@ app.use("/api/address", require("./routes/addressRoute"));
 app.use("/api/review", require("./routes/reviewRoutes"));
 // app.use('/api/review', require('./routes/reviewRoutes'))
 
-// // starting the server.
-// app.listen(PORT, () => {
-//   console.log(`Server - app is running on port ${PORT}`);
-// });
-
-// Create HTTPS server
-// https.createServer(httpsOptions, app).listen(PORT, (err) => {
-//   if (err) {
-//     console.error(`Failed to start server: ${err.message}`);
-//   } else {
-//     console.log(`Server running on https://localhost:${PORT}`);
-//   }
-// });
+app.use("/api/logs", logRoutes);
 
 // HTTPS options (read your certificate and key files)
 const httpsOptions = {
@@ -116,13 +129,6 @@ const httpServer = http.createServer(httpApp);
 // Define ports
 const HTTPS_PORT = process.env.HTTPS_PORT || 443; // Default HTTPS port is 443
 const HTTP_PORT = process.env.PORT || 80; // Default HTTP port is 80
-
-// // Start HTTP server for redirecting to HTTPS
-// httpServer.listen(HTTP_PORT, () => {
-//   console.log(
-//     `HTTP Server is running on port ${HTTP_PORT} and redirecting to HTTPS`
-//   );
-// });
 
 // Start HTTPS server
 httpsServer.listen(HTTPS_PORT, () => {

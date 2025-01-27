@@ -1,7 +1,7 @@
 const orderModel = require("../model/orderModel");
 
 exports.addOrder = async (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     const { carts, address, total, paymentType, totalAmount } = req.body;
 
     try {
@@ -17,7 +17,7 @@ exports.addOrder = async (req, res) => {
 
         res.status(200).json({ success: true, order });
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -72,7 +72,7 @@ exports.getUserOrders = async (req, res) => {
             })
             .sort({ createdAt: -1 });
 
-        console.log('Fetched Orders:', orders); // Debugging
+        // console.log('Fetched Orders:', orders); // Debugging
 
         res.status(200).json({
             success: true,

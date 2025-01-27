@@ -76,7 +76,7 @@ const authGuard = (req, res, next) => {
     req.user = decodeUser;
     next();
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.json({
       success: false,
       message: "Invalid Token",
