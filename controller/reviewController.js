@@ -3,7 +3,7 @@ const Product = require("../model/productModel.js")
 const Rating = require("../model/review.js")
 
 const createRating = async (req, res) => {
-    // console.log(req.body);
+    console.log(req.body);
     const id = req.user.id;
 
     // destructure data 
@@ -54,14 +54,14 @@ const createRating = async (req, res) => {
         });
 
     } catch (error) {
-        // console.log(error);
+        console.log(error);
         res.status(500).json("Server Error");
     }
 };
 
 const updateRating = async (req, res) => {
-    // console.log(req.body);
-    // console.log(req.files);
+    console.log(req.body);
+    console.log(req.files);
 
     const {
         userID,
@@ -98,7 +98,7 @@ const updateRating = async (req, res) => {
         })
 
     } catch (error) {
-        // console.log(error)
+        console.log(error)
         res.status(500).json({
             success: false,
             message: "Server Error"
@@ -111,7 +111,7 @@ const getReviewsByUserID = async (req, res) => {
     const id = req.params.id;
     try {
         const reviews = await Rating.find({ userID: id });
-        // console.log(reviews);
+        console.log(reviews);
         res.json({
             message: "Reviews retrieved",
             success: true,
@@ -129,7 +129,7 @@ const getReviewsByProductID = async (req, res) => {
     const id = req.params.id;
     try {
         const reviews = await Rating.find({ productID: id });
-        // console.log(reviews);
+        console.log(reviews);
         res.json({
             message: "Reviews retrieved",
             success: true,

@@ -1,7 +1,7 @@
 const orderModel = require("../model/orderModel");
 
 exports.addOrder = async (req, res) => {
-    // console.log(req.body);
+    console.log(req.body);
     const { carts, address, total, paymentType, totalAmount } = req.body;
 
     try {
@@ -17,7 +17,7 @@ exports.addOrder = async (req, res) => {
 
         res.status(200).json({ success: true, order });
     } catch (error) {
-        // console.log(error);
+        console.log(error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -38,27 +38,7 @@ exports.getAllOrders = async (req, res) => {
     }
 };
 
-// exports.getUserOrders = async (req, res) => {
-//     try {
-//         const orders = await orderModel
-//             .find({ userId: req.user.id })
-//             .populate("carts")
-//             .populate({
-//                 path: "carts",
-//                 populate: {
-//                     path: "productId",
-//                     model: "products",
-//                 },
-//             })
-//             .sort({ createdAt: -1 });
-//         res.status(200).json({
-//             success: true,
-//             orders,
-//         });
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
+
 exports.getUserOrders = async (req, res) => {
     try {
         const orders = await orderModel
@@ -72,7 +52,7 @@ exports.getUserOrders = async (req, res) => {
             })
             .sort({ createdAt: -1 });
 
-        // console.log('Fetched Orders:', orders); // Debugging
+        console.log('Fetched Orders:', orders); // Debugging
 
         res.status(200).json({
             success: true,

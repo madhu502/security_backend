@@ -6,10 +6,8 @@ const shippingAddressController = require('../controller/addressController');
 // Create or Update Shipping Address
 router.post('/shipping-address', shippingAddressController.createShippingAddress);
 router.put('/update-shipping-address/:addressId', shippingAddressController.updateShippingAddress);
-
-// Route to fetch shipping address with user details
 router.get('/getaddress/:userId', shippingAddressController.getAllShippingAddresses);
-router.get('/getaddressbyaddressId/:addressId', shippingAddressController.getShippingAddressById);
 router.delete('/deleteaddress/:addressId', shippingAddressController.deleteAddress);
+router.get('/getaddressbyaddressId/:addressId', shippingAddressController.getShippingAddressById);
 
 module.exports = router;

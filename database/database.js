@@ -7,11 +7,11 @@ const mongoose = require("mongoose");
 
 const connectDatabase = () => {
   try {
-    mongoose.connect(process.env.MONGODB_LOCAL).then(() => {
+    mongoose.connect(process.env.MONGODB_CLOUD).then(() => {
       console.log("Database connected!");
     });
   } catch {
-    // console.log("Database not connected");
+    console.log("Database not connected");
   }
 };
 
