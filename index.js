@@ -6,6 +6,9 @@ const mongoose = require("mongoose");
 const connectDatabase = require("./database/database");
 // importing the dotenv
 const dotenv = require("dotenv");
+const fs = require("fs");
+const https = require("https");
+const http = require("http");
 // importing cors  to link with frontend (its a policy)
 const cors = require("cors");
 // importing express-fileupload
@@ -81,9 +84,27 @@ app.get("/api/auth/validate-token", async (req, res) => {
   }
 });
 
-// starting the server.
-app.listen(PORT, () => {
-  console.log(`Server - app is running on port ${PORT}`);
+const httpsOptions = {
+  key: fs.readFileSync("./localhost+2-key.pem"),
+  cert: fs.readFileSync("./localhost+2.pem"),
+};
+// HTTPS server
+const httpsServer = https.createServer(httpsOptions, app);
+
+// HTTP to HTTPS redirect
+const httpApp = express();
+httpApp.use((req, res) => {
+  res.redirect(`https://localhost:${process.env.HTTPS_PORT}${req.url}`);
+});
+const httpServer = http.createServer(httpApp);
+
+// Ports
+const HTTPS_PORT = process.env.HTTPS_PORT || 443;
+// const HTTP_PORT = process.env.PORT || 80;
+
+// Start servers
+httpsServer.listen(HTTPS_PORT, () => {
+  console.log(`HTTPS Server is running on https://localhost:${HTTPS_PORT}`);
 });
 
 module.exports = app;
